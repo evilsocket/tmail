@@ -1,0 +1,1 @@
+{"using":["urn:ietf:params:jmap:core"],"methodCalls":[["x:Action/set",{"create":{"reload":{"@type":"ReloadTlsCertificates"}}},"reload"]]}

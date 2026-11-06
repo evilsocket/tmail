@@ -1,0 +1,11 @@
+{
+  "@type": "User",
+  "name": "REPLACE_WITH_CHOSEN_LOCAL_PART",
+  "domainId": "REPLACE_WITH_TMAIL_DOMAIN_ID",
+  "roles": {"@type": "User"},
+  "permissions": {"@type": "Inherit"},
+  "aliases": {},
+  "memberGroupIds": {},
+  "quotas": {"maxDiskQuota": 1073741824},
+  "credentials": {"0": {"@type": "Password", "secret": "REPLACE_WITH_A_UNIQUE_RANDOM_PASSWORD"}}
+}

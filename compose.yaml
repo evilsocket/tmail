@@ -1,0 +1,122 @@
+name: tmail
+
+x-defaults: &defaults
+  restart: unless-stopped
+  init: true
+  read_only: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  pids_limit: 128
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "3"}
+
+services:
+  tailscale:
+    <<: *defaults
+    build: {context: ., target: tailscale}
+    environment:
+      TS_HOSTNAME: tmail
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_USERSPACE: "true"
+      TS_AUTH_ONCE: "true"
+      TS_ACCEPT_DNS: "false"
+      TS_NO_LOGS_NO_SUPPORT: "true"
+      TS_EXTRA_ARGS: --accept-routes=false
+      TS_SERVE_CONFIG: /etc/tmail/serve.json
+    secrets: [tailscale_authkey]
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - tailscale-socket:/var/run/tailscale
+      - ./config:/etc/tmail:ro
+    networks:
+      internet: {}
+      backend: {ipv4_address: "${TMAIL_PROXY_IP:-172.30.240.2}"}
+    extra_hosts: ["mail:${TMAIL_MAIL_IP:-172.30.240.3}"]
+    tmpfs: [/tmp]
+    mem_limit: 256m
+    cpus: 1
+    healthcheck:
+      test: [CMD-SHELL, 'tailscale --socket=$$TS_SOCKET status --json | grep -q ''"BackendState": "Running"''']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  mail:
+    <<: *defaults
+    build: {context: ., target: mail}
+    environment:
+      TMAIL_HOSTNAME: ${TMAIL_HOSTNAME:?Set TMAIL_HOSTNAME}
+      TMAIL_PROXY_IP: ${TMAIL_PROXY_IP:-172.30.240.2}
+      TMAIL_MAINTENANCE_IP: ${TMAIL_MAINTENANCE_IP:-172.30.240.4}
+    secrets: [admin_password, owner_password, maintenance_password, blob_key]
+    volumes:
+      - mail-data:/var/lib/stalwart
+      - mail-config:/etc/stalwart
+      - certificates:/certificates:ro
+      # Do not forward queries through Docker's embedded DNS resolver.
+      - ./config/resolv.conf:/etc/resolv.conf:ro
+    networks:
+      backend: {ipv4_address: "${TMAIL_MAIL_IP:-172.30.240.3}"}
+    tmpfs:
+      - /tmp:uid=2000,gid=2000,mode=0700
+      - /run/tmail:uid=2000,gid=2000,mode=0700
+      - /var/cache/tmail:uid=2000,gid=2000,mode=0700
+    mem_limit: 2g
+    cpus: 2
+    healthcheck:
+      test: [CMD, /opt/tmail/scripts/mail-health.sh]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+  maintenance:
+    <<: *defaults
+    build: {context: ., target: maintenance}
+    cap_add: [CHOWN]
+    environment:
+      TMAIL_HOSTNAME: ${TMAIL_HOSTNAME:?Set TMAIL_HOSTNAME}
+      TMAIL_MAIL_IP: ${TMAIL_MAIL_IP:-172.30.240.3}
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_NO_LOGS_NO_SUPPORT: "true"
+    secrets: [maintenance_password]
+    volumes:
+      - tailscale-socket:/var/run/tailscale
+      - certificates:/certificates
+    networks:
+      backend: {ipv4_address: "${TMAIL_MAINTENANCE_IP:-172.30.240.4}"}
+    extra_hosts:
+      - "${TMAIL_HOSTNAME}:${TMAIL_MAIL_IP:-172.30.240.3}"
+    tmpfs: [/tmp, /run/tmail, /var/cache/tmail]
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD, /opt/tmail/scripts/cert-health.sh]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+networks:
+  internet: {}
+  backend:
+    internal: true
+    ipam:
+      config: [{subnet: "${TMAIL_SUBNET:-172.30.240.0/28}"}]
+
+volumes:
+  tailscale-state:
+  tailscale-socket:
+  mail-data:
+  mail-config:
+  certificates:
+
+secrets:
+  tailscale_authkey: {file: ./.secrets/tailscale_authkey}
+  admin_password: {file: ./.secrets/admin_password}
+  owner_password: {file: ./.secrets/owner_password}
+  maintenance_password: {file: ./.secrets/maintenance_password}
+  blob_key: {file: ./.secrets/blob_key}

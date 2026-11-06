@@ -1,0 +1,79 @@
+name: tmail-client-${TMAIL_CLIENT_NAME:?Run scripts/setup-client.sh first}
+
+x-bridge: &bridge
+  build: {context: ., target: client}
+  image: tmail-client:local
+  profiles: [mcp]
+  init: true
+  stdin_open: true
+  tty: false
+  read_only: true
+  user: "${TMAIL_CLIENT_UID:?}:${TMAIL_CLIENT_GID:?}"
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 64
+  mem_limit: 512m
+  cpus: 1
+  tmpfs: [/tmp]
+  networks: [backend]
+  volumes:
+    - ./.clients/${TMAIL_CLIENT_NAME}/mail:/config:ro
+  logging: {driver: none}
+
+services:
+  gateway:
+    build: {context: ., target: client-gateway}
+    image: tmail-client-gateway:local
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: 1
+    environment:
+      TMAIL_HOSTNAME: ${TMAIL_HOSTNAME:?}
+      TS_HOSTNAME: tmail-${TMAIL_CLIENT_NAME}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_USERSPACE: "true"
+      TS_AUTH_ONCE: "true"
+      TS_ACCEPT_DNS: "false"
+      TS_EXTRA_ARGS: --accept-routes=false
+      TS_NO_LOGS_NO_SUPPORT: "true"
+    secrets: [tailscale_authkey]
+    volumes: [tailscale-state:/var/lib/tailscale]
+    tmpfs: [/tmp, /var/run/tailscale]
+    networks:
+      internet: {}
+      backend:
+        aliases: [tmail-client-backend, "${TMAIL_HOSTNAME}"]
+    healthcheck:
+      test: [CMD-SHELL, 'tailscale --socket=$$TS_SOCKET status --json | grep -q ''"BackendState": "Running"''']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+
+  mail:
+    <<: *bridge
+    command: [mail]
+
+  events:
+    <<: *bridge
+    command: [events]
+    volumes:
+      - ./.clients/${TMAIL_CLIENT_NAME}/mail:/config:ro
+      - ./.clients/${TMAIL_CLIENT_NAME}/state:/state
+
+networks:
+  internet: {}
+  backend: {internal: true}
+volumes:
+  tailscale-state: {}
+secrets:
+  tailscale_authkey: {file: "./.clients/${TMAIL_CLIENT_NAME}/tailscale_authkey"}

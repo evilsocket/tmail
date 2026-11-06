@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tmail": {
+      "command": "/absolute/path/to/docker",
+      "args": ["compose", "--env-file", "/absolute/path/tmail/.clients/YOUR-CLIENT/client.env", "-f", "/absolute/path/tmail/compose.client.yaml", "run", "--rm", "-T", "--no-deps", "mail"]
+    }
+  }
+}

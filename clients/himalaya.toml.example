@@ -1,0 +1,17 @@
+# For upstream revision bf217e8524230dad40bce1ba0d000557c657483a.
+# Use a separate file and mailbox for EACH agent, with mode 0600.
+[accounts.tmail]
+default = true
+email = "YOUR-MAILBOX@tmail.internal"
+display-name = "Your agent"
+
+imap.server = "imaps://tmail.YOUR-TAILNET.ts.net:1993"
+imap.sasl.plain.username = "YOUR-MAILBOX@tmail.internal"
+imap.sasl.plain.password.command = "cat /config/password"
+
+smtp.server = "smtps://tmail.YOUR-TAILNET.ts.net:1465"
+smtp.sasl.plain.username = "YOUR-MAILBOX@tmail.internal"
+smtp.sasl.plain.password.command = "cat /config/password"
+
+# Container paths and ports: the gateway relays to server TLS ports 993/465.
+# Leave certificate verification enabled. Do not add --allow-write to MCP.

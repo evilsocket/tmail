@@ -1,0 +1,55 @@
+# Local deployment configuration and secrets
+.env
+.env.*
+!.env.example
+.secrets/
+.clients/
+.cache/
+backups/
+*.pem
+*.key
+*.p12
+*.pfx
+*.age
+credentials.json
+*-credentials.json
+*_credentials.json
+*_password
+*-password
+tailscale_authkey
+blob_key
+
+# Local MCP and mail-client configuration; keep the supplied examples
+.mcp.json
+.mcp.*.json
+claude_desktop_config.json
+claude-desktop.json
+codex.toml
+himalaya.toml
+*-himalaya.toml
+channel.json
+*-channel.json
+clients/channel/config.json
+clients/channel/config.*.json
+!clients/channel/config.example.json
+channel-state/
+*-channel-state/
+
+# Logs, editor backups, and temporary files
+*.log
+*.log.*
+logs/
+*~
+*.swp
+*.swo
+*.bak
+*.orig
+*.tmp
+*.temp
+.idea/
+.vscode/
+
+# Dependencies, caches, and OS metadata
+__pycache__/
+node_modules/
+.DS_Store

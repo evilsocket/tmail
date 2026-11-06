@@ -1,0 +1,24 @@
+// Optional device/port restrictions; see docs/access-control.md.
+// Merge deliberately into your tailnet policy. Grants/ACLs are ADDITIVE.
+// Replace the example administrator and test-node addresses before saving.
+{
+  "groups": {"group:tmail-operators": ["you@example.com"]},
+  "tagOwners": {
+    "tag:tmail-server": ["group:tmail-operators"],
+    "tag:tmail-admin": ["group:tmail-operators"],
+    "tag:tmail-client": ["group:tmail-operators"]
+  },
+  "grants": [
+    {"src": ["tag:tmail-admin"], "dst": ["tag:tmail-server"], "ip": ["tcp:443", "tcp:465", "tcp:993"]},
+    {"src": ["tag:tmail-client"], "dst": ["tag:tmail-server"], "ip": ["tcp:465", "tcp:993"]}
+  ],
+  "tests": [
+    {"src": "tag:tmail-admin", "accept": ["tag:tmail-server:443", "tag:tmail-server:465", "tag:tmail-server:993"],
+      "deny": ["tag:tmail-server:25", "tag:tmail-server:8080", "tag:tmail-server:8444"]},
+    {"src": "tag:tmail-client", "accept": ["tag:tmail-server:465", "tag:tmail-server:993"],
+      "deny": ["tag:tmail-server:443", "tag:tmail-server:25", "tag:tmail-server:8080", "tag:tmail-server:8444"]},
+    // Replace with an existing, untagged/unapproved tailnet node IPv4 and IPv6.
+    {"src": "100.64.0.99", "deny": ["tag:tmail-server:443", "tag:tmail-server:465", "tag:tmail-server:993"]},
+    {"src": "fd7a:115c:a1e0::99", "deny": ["tag:tmail-server:443", "tag:tmail-server:465", "tag:tmail-server:993"]}
+  ]
+}

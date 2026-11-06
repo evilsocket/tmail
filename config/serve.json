@@ -1,0 +1,8 @@
+{
+  "TCP": {
+    "443": {"TCPForward": "mail:8443", "ProxyProtocol": 2},
+    "465": {"TCPForward": "mail:1465", "ProxyProtocol": 2},
+    "993": {"TCPForward": "mail:1993", "ProxyProtocol": 2}
+  },
+  "AllowFunnel": {}
+}

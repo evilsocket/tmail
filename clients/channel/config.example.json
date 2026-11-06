@@ -1,0 +1,8 @@
+{
+  "host": "tmail.YOUR-TAILNET.ts.net",
+  "port": 1993,
+  "username": "YOUR-AGENT@tmail.internal",
+  "passwordFile": "/config/password",
+  "allowedSenders": ["owner@tmail.internal"],
+  "stateDirectory": "/state/inbox"
+}

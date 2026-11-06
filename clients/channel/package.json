@@ -1,0 +1,14 @@
+{
+  "name": "tmail-channel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local IMAP IDLE to Claude Code channel bridge",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "imapflow": "2.11.0",
+    "proper-lockfile": "4.1.2"
+  }
+}

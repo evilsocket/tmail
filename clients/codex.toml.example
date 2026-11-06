@@ -1,0 +1,8 @@
+# Add to the MCP configuration used by your Codex/ChatGPT CLI or desktop app.
+[mcp_servers.tmail]
+command = "/absolute/path/to/docker"
+args = ["compose", "--env-file", "/absolute/path/tmail/.clients/YOUR-CLIENT/client.env", "-f", "/absolute/path/tmail/compose.client.yaml", "run", "--rm", "-T", "--no-deps", "mail"]
+startup_timeout_sec = 60
+tool_timeout_sec = 60
+
+# Build the client images and start its gateway before opening the AI session.
